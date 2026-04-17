@@ -30,8 +30,12 @@ with col1:
             "Action": ["Clock In"]
         })
         
-        # Read current data + append new row + write back
-        df = conn.read(worksheet="Timeclock_Database")
+        # Indentation fixed below
+        try:
+            df = conn.read(worksheet="Timeclock_Database")
+        except Exception:
+            df = pd.DataFrame(columns=["Timestamp", "Employee", "Action"])
+            
         df = pd.concat([df, new_row], ignore_index=True)
         conn.update(worksheet="Timeclock_Database", data=df)
         
@@ -46,7 +50,12 @@ with col2:
             "Action": ["Clock Out"]
         })
         
-        df = conn.read(worksheet="Timeclock_Database")
+        # Indentation fixed below
+        try:
+            df = conn.read(worksheet="Timeclock_Database")
+        except Exception:
+            df = pd.DataFrame(columns=["Timestamp", "Employee", "Action"])
+            
         df = pd.concat([df, new_row], ignore_index=True)
         conn.update(worksheet="Timeclock_Database", data=df)
         
