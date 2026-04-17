@@ -29,11 +29,13 @@ with col1:
                 "Action": "Clock In"
             }])
             
-            # Using your exact tab name: Timeclock_Database
-            conn.create(
-                worksheet="Timeclock_Database", 
-                data=new_row
-            )
+            # PULL existing data first
+            df = conn.read(worksheet="Timeclock_Database", ttl=0)
+            # ADD the new punch to the list
+            updated_df = pd.concat([df, new_row], ignore_index=True)
+            # SAVE it back (using .update so we don't try to create a duplicate tab)
+            conn.update(worksheet="Timeclock_Database", data=updated_df)
+            
             st.success(f"✅ {employee} clocked IN at {timestamp}")
             st.balloons()
         except Exception as e:
@@ -49,11 +51,13 @@ with col2:
                 "Action": "Clock Out"
             }])
             
-            # Using your exact tab name: Timeclock_Database
-            conn.create(
-                worksheet="Timeclock_Database", 
-                data=new_row
-            )
+            # PULL existing data first
+            df = conn.read(worksheet="Timeclock_Database", ttl=0)
+            # ADD the new punch to the list
+            updated_df = pd.concat([df, new_row], ignore_index=True)
+            # SAVE it back
+            conn.update(worksheet="Timeclock_Database", data=updated_df)
+            
             st.success(f"✅ {employee} clocked OUT at {timestamp}")
         except Exception as e:
             st.error(f"Error: {e}")
