@@ -12,52 +12,68 @@ st.title("⏰ Clock In / Clock Out")
 
 # 1. Establish Connection
 conn = st.connection("gsheets", type=GSheetsConnection)
+URL = "https://docs.google.com/spreadsheets/d/1-IqIw7WqDFa1sXIQHhrgIn0edyTPRk4ZJ73IELlzo7Y/edit"
 
-# 2. UI for Clocking
-employees = ["Sarah", "Emma", "Mia", "Olivia", "Liam", "Noah"]
-employee = st.selectbox("Employee Name", employees)
+# 2. UNIQUE ID MAPPING (The "Brain" of the system)
+# You can change these 6-digit codes to whatever you want
+ID_MAP = {
+    "111222": "Sarah",
+    "333444": "Emma",
+    "555666": "Mia",
+    "777888": "Olivia",
+    "999000": "Liam",
+    "123456": "Noah"
+}
+
+# 3. UI: Only one input field
+user_id = st.text_input("Enter your 6-Digit Employee ID", type="password")
+
+# We look up the name automatically based on the ID
+employee_name = ID_MAP.get(user_id)
 
 col1, col2 = st.columns(2)
 
 with col1:
     if st.button("🟢 Clock In", type="primary", use_container_width=True):
-        try:
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            new_row = pd.DataFrame([{
-                "Timestamp": timestamp,
-                "Employee": employee,
-                "Action": "Clock In"
-            }])
-            
-            # PULL existing data first
-            df = conn.read(worksheet="Timeclock_Database", ttl=0)
-            # ADD the new punch to the list
-            updated_df = pd.concat([df, new_row], ignore_index=True)
-            # SAVE it back (using .update so we don't try to create a duplicate tab)
-            conn.update(worksheet="Timeclock_Database", data=updated_df)
-            
-            st.success(f"✅ {employee} clocked IN at {timestamp}")
-            st.balloons()
-        except Exception as e:
-            st.error(f"Error: {e}")
+        if not employee_name:
+            st.error("Invalid Employee ID. Please try again.")
+        else:
+            try:
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                new_row = pd.DataFrame([{
+                    "Timestamp": timestamp,
+                    "Employee": employee_name, # Automatically uses the name tied to the ID
+                    "Action": "Clock In"
+                }])
+                
+                # Using UPDATE logic to avoid the "Already Exists" 400 error
+                df = conn.read(worksheet="Timeclock_Database", ttl=0)
+                updated_df = pd.concat([df, new_row], ignore_index=True)
+                conn.update(worksheet="Timeclock_Database", data=updated_df)
+                
+                st.success(f"✅ {employee_name} clocked IN at {timestamp}")
+                st.balloons()
+            except Exception as e:
+                st.error(f"Error: {e}")
 
 with col2:
     if st.button("🔴 Clock Out", type="secondary", use_container_width=True):
-        try:
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            new_row = pd.DataFrame([{
-                "Timestamp": timestamp,
-                "Employee": employee,
-                "Action": "Clock Out"
-            }])
-            
-            # PULL existing data first
-            df = conn.read(worksheet="Timeclock_Database", ttl=0)
-            # ADD the new punch to the list
-            updated_df = pd.concat([df, new_row], ignore_index=True)
-            # SAVE it back
-            conn.update(worksheet="Timeclock_Database", data=updated_df)
-            
-            st.success(f"✅ {employee} clocked OUT at {timestamp}")
-        except Exception as e:
-            st.error(f"Error: {e}")
+        if not employee_name:
+            st.error("Invalid Employee ID. Please try again.")
+        else:
+            try:
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                new_row = pd.DataFrame([{
+                    "Timestamp": timestamp,
+                    "Employee": employee_name,
+                    "Action": "Clock Out"
+                }])
+                
+                df = conn.read(worksheet="Timeclock_Database", ttl=0)
+                updated_df = pd.concat([df, new_row], ignore_index=True)
+                conn.update(worksheet="Timeclock_Database", data=updated_df)
+                
+                st.success(f"✅ {employee_name} clocked OUT at {timestamp}")
+                st.balloons()
+            except Exception as e:
+                st.error(f"Error: {e}")
