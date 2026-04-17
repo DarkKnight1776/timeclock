@@ -1,35 +1,53 @@
 import streamlit as st
+import pandas as pd
 from datetime import datetime
 from streamlit_gsheets import GSheetsConnection
 
-# 1. Setup the connection
+# ================== GATEKEEPER ==================
+if 'logged_in' not in st.session_state or not st.session_state.logged_in:
+    st.warning("Please login from the home page first.")
+    st.stop()
+# ===============================================
+
+st.title("⏰ Clock In / Clock Out")
+
+# Connect to Google Sheet
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-st.title("Clock In / Out")
+# Employee list (add/remove names here)
+employees = ["Sarah", "Emma", "Mia", "Olivia", "Liam", "Noah"]
 
-# 2. Create the ACTUAL input boxes so they appear on screen
-# We use a 'form' so the page doesn't refresh until you hit submit
-with st.form("time_clock_form"):
-    # Pull names from your session_state list we made earlier
-    # Change your line 14 to this:
-if not st.session_state.get('logged_in', False):
-    show_login()
-    action = st.radio("What are you doing?", ["Clock In", "Clock Out"])
-    
-    submitted = st.form_submit_button("Submit Entry")
+employee = st.selectbox("Employee Name", employees)
 
-    if submitted:
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+col1, col2 = st.columns(2)
+
+with col1:
+    if st.button("🟢 Clock In", type="primary", use_container_width=True):
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        new_row = pd.DataFrame({
+            "Timestamp": [timestamp],
+            "Employee": [employee],
+            "Action": ["Clock In"]
+        })
         
-        # 3. Use the variables from the selectbox and radio button
-        new_data = {
-            "Timestamp": [current_time],
-            "Employee": [employee],  # Matches the variable from the selectbox above
-            "Action": [action]       # Matches the variable from the radio above
-        }
+        # Read current data + append new row + write back
+        df = conn.read(worksheet="Timeclock_Database")
+        df = pd.concat([df, new_row], ignore_index=True)
+        conn.update(worksheet="Timeclock_Database", data=df)
         
-        try:
-            conn.create(data=new_data)
-            st.success(f"Verified! {employee} {action}ed at {current_time}")
-        except Exception as e:
-            st.error(f"Error sending to Sheets: {e}")
+        st.success(f"✅ {employee} clocked IN at {timestamp}")
+
+with col2:
+    if st.button("🔴 Clock Out", type="secondary", use_container_width=True):
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        new_row = pd.DataFrame({
+            "Timestamp": [timestamp],
+            "Employee": [employee],
+            "Action": ["Clock Out"]
+        })
+        
+        df = conn.read(worksheet="Timeclock_Database")
+        df = pd.concat([df, new_row], ignore_index=True)
+        conn.update(worksheet="Timeclock_Database", data=df)
+        
+        st.success(f"✅ {employee} clocked OUT at {timestamp}")
