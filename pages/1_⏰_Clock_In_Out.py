@@ -2,24 +2,32 @@ import streamlit as st
 from datetime import datetime
 from streamlit_gsheets import GSheetsConnection
 
-# Connect to the Sheet
+# 1. Setup the connection
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-# Your Clock-In Logic
-if st.button("Submit Entry"):
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+st.title("Clock In / Out")
+
+# 2. Create the ACTUAL input boxes so they appear on screen
+# We use a 'form' so the page doesn't refresh until you hit submit
+with st.form("time_clock_form"):
+    # Pull names from your session_state list we made earlier
+    employee = st.selectbox("Select Employee", options=st.session_state.employees)
+    action = st.radio("What are you doing?", ["Clock In", "Clock Out"])
     
-    # Create the row to send
-    # Make sure keys match your column headers exactly!
-    new_data = {
-        "Timestamp": [current_time],
-        "Employee": [st.session_state.current_user], # Or your selectbox variable
-        "Action": [action_variable]
-    }
-    
-    # Send to the sheet
-    try:
-        conn.create(spreadsheet="Timeclock_Database", data=new_data)
-        st.success(f"Success! Data saved to Timeclock_Database.")
-    except Exception as e:
-        st.error(f"Failed to send data: {e}")
+    submitted = st.form_submit_button("Submit Entry")
+
+    if submitted:
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # 3. Use the variables from the selectbox and radio button
+        new_data = {
+            "Timestamp": [current_time],
+            "Employee": [employee],  # Matches the variable from the selectbox above
+            "Action": [action]       # Matches the variable from the radio above
+        }
+        
+        try:
+            conn.create(data=new_data)
+            st.success(f"Verified! {employee} {action}ed at {current_time}")
+        except Exception as e:
+            st.error(f"Error sending to Sheets: {e}")
