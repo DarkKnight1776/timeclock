@@ -11,7 +11,9 @@ st.title("Clock In / Out")
 # We use a 'form' so the page doesn't refresh until you hit submit
 with st.form("time_clock_form"):
     # Pull names from your session_state list we made earlier
-    employee = st.selectbox("Select Employee", options=st.session_state.employees)
+    # Change your line 14 to this:
+if not st.session_state.get('logged_in', False):
+    show_login()
     action = st.radio("What are you doing?", ["Clock In", "Clock Out"])
     
     submitted = st.form_submit_button("Submit Entry")
