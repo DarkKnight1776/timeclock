@@ -1,47 +1,64 @@
 import streamlit as st
 import pandas as pd
+from streamlit_gsheets import GSheetsConnection
 
-def show_payroll_calculator(df):
-    st.header("💰 2-Week Payroll Summary")
-    
-    # 1. Convert Timestamp column to actual 'Time' objects so Python can do math
-    df['Timestamp'] = pd.to_datetime(df['Timestamp'])
-    
-    # 2. Get list of unique employees
-    employees = df['Employee'].unique()
-    
-    payroll_data = []
-    
-    for person in employees:
-        # Filter data for just this person
-        person_df = df[df['Employee'] == person].sort_values('Timestamp')
-        
-        total_seconds = 0
-        last_in_time = None
-        
-        # Loop through their punches to find pairs
-        for index, row in person_df.iterrows():
-            if row['Action'] == "Clock In":
-                last_in_time = row['Timestamp']
-            elif row['Action'] == "Clock Out" and last_in_time is not None:
-                # Calculate difference
-                duration = row['Timestamp'] - last_in_time
-                total_seconds += duration.total_seconds()
-                last_in_time = None # Reset for next pair
-        
-        # Convert seconds to hours
-        total_hours = round(total_seconds / 3600, 2)
-        
-        # Calculate Pay (assuming a flat rate of $15/hr for now)
-        hourly_rate = 15.00
-        dollars_owed = round(total_hours * hourly_rate, 2)
-        
-        payroll_data.append({
-            "Name": person,
-            "Hours Worked": total_hours,
-            "Dollars Owed": f"${dollars_owed:,.2f}"
-        })
+# --- GATEKEEPER ---
+if 'logged_in' not in st.session_state or not st.session_state.logged_in:
+    st.warning("Please login from the home page first.")
+    st.stop()
 
-    # 3. Display the "Little Format" you wanted
-    payroll_df = pd.DataFrame(payroll_data)
-    st.table(payroll_df)
+st.title("💰 Payroll & Hours Report")
+
+# 1. Establish Connection
+conn = st.connection("gsheets", type=GSheetsConnection)
+URL = "https://docs.google.com/spreadsheets/d/1-IqIw7WqDFa1sXIQHhrgIn0edyTPRk4ZJ73IELlzo7Y/edit"
+
+try:
+    # 2. Read the data
+    df = conn.read(spreadsheet=URL, worksheet="Timeclock_Database", ttl=0)
+    
+    if df.empty:
+        st.info("The database is currently empty.")
+    else:
+        # Display raw logs first to verify connection
+        with st.expander("View Raw Logs"):
+            st.dataframe(df)
+
+        # 3. Process Hours
+        # Ensure the column name matches EXACTLY what you see in the sheet
+        df['Timestamp'] = pd.to_datetime(df['Timestamp'])
+        
+        # Simple Logic to show total entries per person
+        st.subheader("Summary by Employee")
+        summary = df.groupby('Employee')['Action'].count().reset_index()
+        summary.columns = ['Employee', 'Total Punches']
+        st.table(summary)
+
+        # 4. Detailed Calculation (Name: Hours Worked: Dollars Owed)
+        st.subheader("Payroll Breakdown")
+        results = []
+        for employee in df['Employee'].unique():
+            person_df = df[df['Employee'] == employee].sort_values('Timestamp')
+            
+            total_hours = 0
+            last_in = None
+            
+            for i, row in person_df.iterrows():
+                if row['Action'] == "Clock In":
+                    last_in = row['Timestamp']
+                elif row['Action'] == "Clock Out" and last_in is not None:
+                    duration = row['Timestamp'] - last_in
+                    total_hours += duration.total_seconds() / 3600
+                    last_in = None
+            
+            pay_rate = 15.00 # You can change this
+            results.append({
+                "Employee": employee,
+                "Hours Worked": round(total_hours, 2),
+                "Dollars Owed": f"${round(total_hours * pay_rate, 2):,.2f}"
+            })
+            
+        st.table(pd.DataFrame(results))
+
+except Exception as e:
+    st.error(f"Error loading report: {e}")
