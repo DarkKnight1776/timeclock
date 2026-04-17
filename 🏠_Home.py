@@ -9,7 +9,7 @@ if 'logged_in' not in st.session_state:
 def show_login():
     st.title("👋 Hi! Please login below")
 
-    passcode = st.text_input("Enter your personal ID code here", type = "password")
+    passcode = st.text_input("Enter your six digit ID code here", type = "password")
 
     if st.button("login"):
         if passcode == "177698":
