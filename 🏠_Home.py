@@ -20,6 +20,14 @@ def show_login():
 
 if not st.session_state.logged_in:
     show_login()
+
+    st.markdown("""
+                <style>
+                    [data-testid="stSidebar"] {
+                        display: none;
+                }
+                """, unsafe_allow_html=True)
+
 else:
     st.title("Welcome to the Boutique Portal!")
     st.write("This is where you can manage your boutique operations.")
