@@ -29,8 +29,8 @@ if not st.session_state.logged_in:
                 """, unsafe_allow_html=True)
 
 else:
-    st.title("Welcome to the Boutique Portal!")
-    st.write("This is where you can manage your boutique operations.")
+    st.title("Welcome to 🌷 The Pink Tulip Time Tracker!")
+    st.write("Please use the sidebar to navigate.")
 
     if st.sidebar.button("Log Out"):
         st.session_state.logged_in = False
