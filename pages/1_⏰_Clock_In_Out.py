@@ -52,7 +52,6 @@ with col1:
                 conn.update(worksheet="Timeclock_Database", data=updated_df)
                 
                 st.success(f"✅ {employee_name} clocked IN at {timestamp}")
-                st.balloons()
             except Exception as e:
                 st.error(f"Error: {e}")
 
