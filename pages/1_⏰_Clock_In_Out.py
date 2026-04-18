@@ -17,7 +17,7 @@ URL = "https://docs.google.com/spreadsheets/d/1-IqIw7WqDFa1sXIQHhrgIn0edyTPRk4ZJ
 # 2. UNIQUE ID MAPPING (The "Brain" of the system)
 # You can change these 6-digit codes to whatever you want
 ID_MAP = {
-    "111222": "Sarah",
+    "111222": "Bellardo",
     "333444": "Emma",
     "555666": "Mia",
     "777888": "Olivia",
