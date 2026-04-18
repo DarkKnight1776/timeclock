@@ -16,11 +16,22 @@ if st.sidebar.button("Log Out", use_container_width=True):
     st.session_state.employee_name = None
     st.switch_page("Home.py")
 
-# 1. Establish Connection
+# 1. Database Connection
 conn = st.connection("gsheets", type=GSheetsConnection)
 URL = "https://docs.google.com/spreadsheets/d/1-IqIw7WqDFa1sXIQHhrgIn0edyTPRk4ZJ73IELlzo7Y/edit"
 # We look up the name automatically based on the ID
 employee_name = st.session_state.employee_name
+
+df = conn.read(worksheet="Timeclock_Database", ttl=0)
+
+user_history = df[df["Employee"] == employee_name]
+
+if not user_history.empty:
+    # Get the "Action" from the very last row in their history
+    last_action = user_history.iloc[-1]["Action"]
+    is_clocked_in = (last_action == "Clock In")
+else:
+    is_clocked_in = False
 
 st.subheader(f"Ready to clock in, {employee_name}?")
 
