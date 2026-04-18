@@ -1,69 +1,47 @@
 import streamlit as st
-import time
 
-# --- 1. PAGE CONFIG & STYLING ---
-st.set_page_config(page_title="The Pink Tulip", page_icon="🌷", layout="wide")
+# --- 1. PAGE CONFIG & HIDING SIDEBAR ---
+st.set_page_config(page_title="The Pink Tulip", page_icon="🌷", layout="centered")
 
-# Hide sidebar when not logged in
-if 'logged_in' not in st.session_state or not st.session_state.logged_in:
-    st.markdown("""
-        <style>
-            [data-testid="stSidebar"] {display: none;}
-        </style>
-    """, unsafe_allow_html=True)
-
-# --- 2. INITIALIZE SESSION STATE ---
+# Initialize the notebook (session state)
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
-if 'role' not in st.session_state:
-    st.session_state.role = None
-if 'show_admin_pass' not in st.session_state:
-    st.session_state.show_admin_pass = False
 
-# --- 3. THE LOGIN FUNCTION ---
-def show_login():
-    st.title("🌷 The Pink Tulip")
-    st.subheader("Enter your personal passcode")
-    
-    # The PIN input
-    passcode = st.text_input("Passcode", type="password", label_visibility="collapsed", key="pin_input")
-    
-    # CHECK PIN: This logic forces the password box to stay visible
-    if passcode == "177698":
-        st.session_state.show_admin_pass = True
-    else:
-        # If they backspace or enter something else, hide the admin password box
-        st.session_state.show_admin_pass = False
-
-    # FORK 1: ADMIN PATH
-    if st.session_state.show_admin_pass:
-        st.info("🔓 Admin PIN recognized.")
-        admin_password = st.text_input("Manager Password", type="password", key="admin_pass_input")
-        
-        if st.button("Unlock Admin Dashboard", type="primary", use_container_width=True):
-            if admin_password == "Tulip2026!": # Your secure password
-                st.session_state.logged_in = True
-                st.session_state.role = "admin"
-                st.rerun()
-            else:
-                st.error("❌ Incorrect Password")
-                
-    # FORK 2: EMPLOYEE PATH
-    elif len(passcode) == 6:
-        if st.button("Clock In/Out", type="primary", use_container_width=True):
-            # This is where we'll eventually check the Google Sheet list
-            st.session_state.logged_in = True
-            st.session_state.role = "employee"
-            st.rerun()
-
-# --- 4. MAIN APP LOGIC ---
+# Hide sidebar ONLY if not logged in
 if not st.session_state.logged_in:
-    show_login()
+    st.markdown("""
+        <style> [data-testid="stSidebar"] { display: none; } </style>
+    """, unsafe_allow_html=True)
+
+# --- 2. THE LOGIN SCREEN (Shows only if NOT logged in) ---
+if not st.session_state.logged_in:
+    st.title("Welcome to The Pink Tulip!🌷💐")
+    
+    passcode = st.text_input("Please enter your 6-digit employee ID", type="password", key="user_passcode")
+    login_button = st.button("Log In", use_container_width=True)
+
+    # Check the code if either the button is pressed OR if they hit enter (passcode has 6 chars)
+    if login_button or (passcode and len(passcode) == 6):
+        all_codes = st.secrets["employee_codes"]
+        
+        if passcode in all_codes:
+            st.session_state.logged_in = True
+            st.session_state.employee_name = all_codes[passcode]
+            # No success message here yet—we want to jump to the portal first!
+            st.rerun() 
+        elif len(passcode) == 6:
+            st.error("Invalid Employee ID. Please try again.")
+
+    # --- 3. THE ACTUAL APP (Shows only IF logged in) ---
 else:
-    # --- LOGGED IN AREA ---
-    if st.session_state.role == "admin":
-        st.title("📊 Manager Dashboard")
-        st.write("Welcome back! Here are the store stats.")
-        # Place your Sales Stats and Employee Overviews here
-    else:
-        st.title("🕒 Employee Portal")
+    # This shows up on the main screen
+    st.success(f"Welcome {st.session_state.employee_name}! You are now logged in.")
+    st.write("Please use the sidebar to navigate.")
+
+    # --- THE LOGOUT BUTTON (In the Sidebar) ---
+    st.sidebar.header(f"Logged in as: {st.session_state.employee_name}")
+    st.sidebar.divider() # Optional: adds a clean line
+    if st.sidebar.button("Log Out", use_container_width=True):
+        st.session_state.logged_in = False
+        st.session_state.employee_name = None 
+        st.rerun()

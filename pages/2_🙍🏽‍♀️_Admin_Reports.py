@@ -9,6 +9,9 @@ if 'logged_in' not in st.session_state or not st.session_state.logged_in:
 
 st.title("💰 Payroll & Hours Report")
 
+st.sidebar.header(f"Logged in as: {st.session_state.employee_name}")
+st.sidebar.divider() # Optional: adds a clean line
+
 # 1. Establish Connection
 conn = st.connection("gsheets", type=GSheetsConnection)
 URL = "https://docs.google.com/spreadsheets/d/1-IqIw7WqDFa1sXIQHhrgIn0edyTPRk4ZJ73IELlzo7Y/edit"

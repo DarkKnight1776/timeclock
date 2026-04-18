@@ -5,31 +5,24 @@ from streamlit_gsheets import GSheetsConnection
 
 # --- GATEKEEPER ---
 if 'logged_in' not in st.session_state or not st.session_state.logged_in:
-    st.warning("Please login from the home page first.")
+    st.warning("Please login from the home page to access this feature.")
     st.stop()
 
-st.title("⏰ Clock In / Clock Out")
+st.sidebar.header(f"Logged in as: {st.session_state.employee_name}")
+st.sidebar.divider()
+
+if st.sidebar.button("Log Out", use_container_width=True):
+    st.session_state.logged_in = False
+    st.session_state.employee_name = None
+    st.switch_page("Home.py")
 
 # 1. Establish Connection
 conn = st.connection("gsheets", type=GSheetsConnection)
 URL = "https://docs.google.com/spreadsheets/d/1-IqIw7WqDFa1sXIQHhrgIn0edyTPRk4ZJ73IELlzo7Y/edit"
-
-# 2. UNIQUE ID MAPPING (The "Brain" of the system)
-# You can change these 6-digit codes to whatever you want
-ID_MAP = {
-    "111222": "Bellardo",
-    "333444": "Emma",
-    "555666": "Mia",
-    "777888": "Olivia",
-    "999000": "Liam",
-    "123456": "Noah"
-}
-
-# 3. UI: Only one input field
-user_id = st.text_input("Enter your 6-Digit Employee ID", type="password")
-
 # We look up the name automatically based on the ID
-employee_name = ID_MAP.get(user_id)
+employee_name = st.session_state.employee_name
+
+st.subheader(f"Ready to clock in, {employee_name}?")
 
 col1, col2 = st.columns(2)
 
@@ -73,6 +66,5 @@ with col2:
                 conn.update(worksheet="Timeclock_Database", data=updated_df)
                 
                 st.success(f"✅ {employee_name} clocked OUT at {timestamp}")
-                st.balloons()
             except Exception as e:
                 st.error(f"Error: {e}")
