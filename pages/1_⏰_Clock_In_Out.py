@@ -34,7 +34,7 @@ employee_name = ID_MAP.get(user_id)
 col1, col2 = st.columns(2)
 
 with col1:
-    if st.button("🟢 Clock In", type="primary", use_container_width=True):
+    if st.button("Clock In", type="primary", use_container_width=True):
         if not employee_name:
             st.error("Invalid Employee ID. Please try again.")
         else:
@@ -56,7 +56,7 @@ with col1:
                 st.error(f"Error: {e}")
 
 with col2:
-    if st.button("🔴 Clock Out", type="secondary", use_container_width=True):
+    if st.button("Clock Out", type="secondary", use_container_width=True):
         if not employee_name:
             st.error("Invalid Employee ID. Please try again.")
         else:

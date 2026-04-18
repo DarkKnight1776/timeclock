@@ -51,7 +51,7 @@ try:
                     total_hours += duration.total_seconds() / 3600
                     last_in = None
             
-            pay_rate = 15.00 # You can change this
+            pay_rate = 150000.00 # You can change this
             results.append({
                 "Employee": employee,
                 "Hours Worked": round(total_hours, 2),
