@@ -38,7 +38,7 @@ else:
 
 # --- 3. THE SINGLE DYNAMIC INTERFACE ---
 st.title("⏰ Time Clock")
-st.subheader(f"Ready to work, {employee_name}?")
+st.subheader(f"Ready to clock in, {employee_name}?")
 
 # This logic gate ensures ONLY one status and ONE button exist on the page
 if is_clocked_in:
